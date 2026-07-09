@@ -8,11 +8,15 @@ on:
 jobs:
   download-shorts:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -32,7 +36,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: downloaded-shorts
-          path: short_*.mp4
+          path: session_*/short_*.mp4
           retention-days: 7
           
       - name: Commit and push changes
@@ -41,5 +45,6 @@ jobs:
           git config --local user.name "GitHub Action"
           git add -A
           git commit -m "Auto: Downloaded shorts $(date)" || true
-          git push
-        continue-on-error: true
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
