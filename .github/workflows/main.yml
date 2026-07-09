@@ -29,7 +29,7 @@ jobs:
           
       - name: Upload downloads
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: downloaded-shorts
           path: short_*.mp4
