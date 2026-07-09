@@ -4,11 +4,12 @@ import glob
 import json
 from datetime import datetime
 import time
+import subprocess
 
 def create_session_folder():
     """Create a new folder for this session with timestamp"""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    session_folder = f"session_{timestamp}"
+    session_folder = f"downloads/session_{timestamp}"
     os.makedirs(session_folder, exist_ok=True)
     print(f"📁 Session folder created: {session_folder}")
     return session_folder
@@ -49,9 +50,51 @@ def save_caption_with_hashtags(video_title, description, session_folder):
         print(f"  ⚠️ Error saving caption: {e}")
         return False
 
+def create_index_file(session_folder):
+    """Create an index file with download links and metadata"""
+    videos = sorted(glob.glob(os.path.join(session_folder, "short_*.mp4")))
+    
+    index = {
+        "session": os.path.basename(session_folder),
+        "created_at": datetime.now().isoformat(),
+        "total_videos": len(videos),
+        "videos": []
+    }
+    
+    for video in videos:
+        base_name = os.path.basename(video)
+        video_name = base_name.replace('short_', '').replace('.mp4', '')
+        
+        info_json = os.path.join(session_folder, f"{base_name.replace('.mp4', '.info.json')}")
+        caption_file = os.path.join(session_folder, f"{video_name}_caption.txt")
+        
+        video_info = {
+            "filename": base_name,
+            "video_file": f"downloads/{os.path.relpath(video)}",
+            "caption_file": f"downloads/{os.path.relpath(caption_file)}" if os.path.exists(caption_file) else None,
+            "metadata_file": f"downloads/{os.path.relpath(info_json)}" if os.path.exists(info_json) else None
+        }
+        
+        # Add caption content if available
+        if os.path.exists(caption_file):
+            try:
+                with open(caption_file, 'r', encoding='utf-8') as f:
+                    video_info["caption_content"] = f.read()
+            except:
+                pass
+        
+        index["videos"].append(video_info)
+    
+    index_file = os.path.join(session_folder, "INDEX.json")
+    with open(index_file, 'w', encoding='utf-8') as f:
+        json.dump(index, f, indent=2, ensure_ascii=False)
+    
+    print(f"  📋 Index file created: INDEX.json")
+    return index_file
+
 def finalize_metadata(session_folder):
     """Process and finalize metadata files"""
-    print("\n⌒ Finalizing metadata files...")
+    print("\n⚒️ Finalizing metadata files...")
     
     description_files = glob.glob(os.path.join(session_folder, "*.description"))
     
@@ -72,6 +115,9 @@ def finalize_metadata(session_folder):
             
         except Exception as e:
             print(f"  ⚠️ Error processing metadata: {e}")
+    
+    # Create index file
+    create_index_file(session_folder)
 
 def run_shorts_downloader():
     """Main downloader function with better error handling"""
@@ -136,7 +182,10 @@ def run_shorts_downloader():
     print(f"📁 Folder: {session_folder}")
     print(f"🎬 Videos: {video_count}")
     print(f"📝 Captions: {caption_count}")
+    print(f"📋 Index: {os.path.join(session_folder, 'INDEX.json')}")
     print(f"="*50)
+    
+    return session_folder
 
 if __name__ == "__main__":
     run_shorts_downloader()

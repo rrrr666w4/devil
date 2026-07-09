@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
         
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -23,23 +25,26 @@ jobs:
           python -m pip install --upgrade pip
           pip install yt-dlp
           
+      - name: Create downloads directory
+        run: |
+          mkdir -p downloads
+          
       - name: Run Shorts Downloader
         run: |
           python shorts_downloader.py
           
-      - name: Upload downloads
+      - name: List downloaded files
         if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: downloaded-shorts
-          path: short_*.mp4
-          retention-days: 7
+        run: |
+          echo "📁 Downloaded files:"
+          find downloads -type f -name "*.mp4" -o -name "*.json" -o -name "*_caption.txt" | head -20
           
       - name: Commit and push changes
+        if: always()
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add -A
-          git commit -m "Auto: Downloaded shorts $(date)" || true
+          git commit -m "Auto: Downloaded shorts $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
           git push
         continue-on-error: true
