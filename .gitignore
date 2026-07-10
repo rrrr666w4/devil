@@ -10,7 +10,11 @@ ENV/
 build/
 develop-eggs/
 dist/
-downloads/
+
+# NOTE: downloads/ is intentionally NOT ignored anymore.
+# It used to be listed here, which meant every downloaded video, caption,
+# and metadata file was silently excluded from every commit — that was
+# the main reason nothing ever showed up in the repo.
 
 # IDE
 .vscode/
