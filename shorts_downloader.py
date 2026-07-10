@@ -163,7 +163,10 @@ def run_shorts_downloader():
     else:
         print(f"⚠️ No cookies.txt found (or it's empty) — YouTube may block this run as a bot.")
 
-    search_query = "ytsearch:shorts india trending viral"
+    # "ytsearch:" alone only returns 1 result. "ytsearchN:" tells yt-dlp how
+    # many results to pull — we search a bit wider than `limit` since some
+    # results will get filtered out by duration/match_filter below.
+    search_query = f"ytsearch{limit * 3}:shorts india trending viral"
     download_failed = False
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
